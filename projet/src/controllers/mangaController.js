@@ -9,7 +9,7 @@ const createSchema = z.object({
     artist: z.string().optional(),
     tags: z.array(z.string()).optional(),
     cover_url: z.string().url().optional(),
-    published_at: z.string().date().optional().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional()
+    published_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()
   })
 });
 
@@ -22,7 +22,7 @@ const updateSchema = z.object({
     artist: z.string().optional(),
     tags: z.array(z.string()).optional(),
     cover_url: z.string().url().optional(),
-    published_at: z.string().date().optional().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional()
+    published_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()
   })
 });
 
