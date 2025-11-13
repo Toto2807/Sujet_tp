@@ -25,6 +25,7 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import userRoutes from './routes/userRoutes.js';
+import mangaRoutes from './routes/mangaRoutes.js'
 import { PrismaClient } from '@prisma/client';
 
 const app = express();
@@ -38,6 +39,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api', mangaRoutes);
 
 
 async function start() {
