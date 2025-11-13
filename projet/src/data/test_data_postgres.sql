@@ -1,3 +1,8 @@
+-- creer un utilisateur de test (mot de passe: password123)
+INSERT INTO users (username, email, password, role, is_ban)
+SELECT 'user1', 'user1@example.com', 'password123', 'user', FALSE
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'user1@example.com');
+
 -- ⚙️ promouvoir l'utilisateur de test en admin
 UPDATE users SET role = 'admin'
 WHERE email = 'user1@example.com';

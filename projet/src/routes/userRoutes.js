@@ -13,7 +13,8 @@ router.get('/:id', authMiddleware, UserController.getOnePublic);
 
 router.get('/admin/total', authMiddleware, permit('admin'), UserController.getAll);
 router.post('/admin', authMiddleware, permit('admin'), UserController.createByAdmin);
-router.delete('/admin/:id', authMiddleware, permit('admin'), UserController.deleteByAdmin);
 router.put('/admin/role/:id', authMiddleware, permit('admin'), UserController.updateRole);
+router.put('/admin/ban/:id', authMiddleware, permit('admin'), UserController.updateBanByAdmin);
+
 
 export default router;

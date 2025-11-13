@@ -47,7 +47,27 @@ export const UserController = {
   const updated = await UserModel.updateRole(id, role);
   if (!updated) return res.status(404).json({ message: 'Utilisateur introuvable' });
   return res.json({ message: `Rôle mis à jour en ${role}`, user: updated });
+  },
+
+  async updateBanByAdmin(req, res) {
+  const { id } = req.params;
+  const { is_ban } = req.body;
+
+  if (typeof is_ban !== 'boolean') {
+    return res.status(400).json({ message: 'is_ban doit être un booléen' });
   }
+
+  const user = await UserModel.updateBan(id, is_ban);
+  if (!user) {
+    return res.status(404).json({ message: 'Utilisateur introuvable' });
+  }
+
+  return res.json({
+    message: is_ban ? 'Utilisateur banni' : 'Utilisateur débanni',
+    user
+  });
+}
+
 
 };
 

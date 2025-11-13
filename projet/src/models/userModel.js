@@ -54,6 +54,19 @@ export const UserModel = {
     [id, role]
   );
   return r.rows[0] || null;
+},
+
+async updateBan(id, is_ban) {
+  const r = await pool.query(
+    `update users
+     set is_ban = $2,
+         updated_at = now()
+     where id = $1
+     returning id, username, email, role, is_ban`,
+    [id, is_ban]
+  );
+  return r.rows[0] || null;
 }
+
 
 };
