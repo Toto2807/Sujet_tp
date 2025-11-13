@@ -1,0 +1,27 @@
+openapi: 3.0.3
+info:
+  title: Scan API
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api
+paths:
+  /auth/register:
+    post:
+      summary: Register
+      responses: { "201": { description: Created } }
+  /auth/login:
+    post:
+      summary: Login
+      responses: { "200": { description: OK } }
+  /auth/refresh:
+    post:
+      summary: Refresh token
+      responses: { "200": { description: OK } }
+  /manga:
+    get:
+      summary: List manga
+      responses: { "200": { description: OK } }
+  /chapters:
+    get:
+      summary: List chapters
+      responses: { "200": { description: OK } }

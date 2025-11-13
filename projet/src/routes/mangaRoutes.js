@@ -1,4 +1,4 @@
-import Router from 'router';
+import { Router } from 'express';
 import { getAll, getOne, create } from '../controllers/mangaController.js';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
 import { permit } from '../middlewares/role.middleware.js';
