@@ -1,44 +1,22 @@
-import * as Fav from '../models/favModel.js';
+import { FavModel } from '../models/favModel.js';
+import { MangaModel } from '../models/mangaModel.js';
 
-export const getMyFavs = async (req, res) => {
-  try {
-    const favs = await Fav.getFavsByUser(req.user.id);
-    res.json(favs);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
-  }
-};
+export async function getMyFavs(req, res) {
+  const data = await FavModel.listByUser(req.user.id);
+  return res.json(data);
+}
 
-export const addToFav = async (req, res) => {
-    try {
-      console.log('req.user =', req.user);
-      console.log('req.body.manga_id =', req.body.manga_id);
-  
-      if (!req.user || !req.user.id) {
-        return res.status(401).json({ message: 'Utilisateur non identifié' });
-      }
-  
-      if (!req.body.manga_id) {
-        return res.status(400).json({ message: 'manga_id manquant' });
-      }
-  
-      const fav = await Fav.addFav(req.user.id, req.body.manga_id);
-      res.status(201).json({ message: 'Favori ajouté', fav });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Erreur serveur', error: err.message });
-    }
-  };
-  
-  
+export async function addToFav(req, res) {
+  const { id_manga } = req.body;
+  if (!id_manga) return res.status(400).json({ message: 'id_manga manquant' });
+  const exists = await MangaModel.get(id_manga);
+  if (!exists) return res.status(404).json({ message: 'Manga introuvable' });
+  await FavModel.add(req.user.id, id_manga);
+  return res.status(201).json({ message: 'Ajouté aux favoris' });
+}
 
-export const removeFromFav = async (req, res) => {
-  try {
-    await Fav.removeFav(req.user.id, req.params.manga_id);
-    res.json({ message: 'Favori supprimé' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
-  }
-};
+export async function removeFromFav(req, res) {
+  const { manga_id } = req.params;
+  await FavModel.remove(req.user.id, manga_id);
+  return res.json({ message: 'Retiré des favoris' });
+}

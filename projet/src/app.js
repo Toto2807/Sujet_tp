@@ -40,7 +40,7 @@ if (swaggerDoc) {
 }
 
 app.use('/api', authRoutes);
-app.use('/api', userRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api', mangaRoutes);
 app.use('/api', favRoutes);
 app.use('/api', historyRoutes);

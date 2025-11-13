@@ -46,5 +46,14 @@ export const UserModel = {
   async deleteById(id) {
     await pool.query('delete from users where id = $1', [id]);
     return true;
-  }
+  },
+
+  async updateRole(id, role) {
+  const r = await pool.query(
+    `update users set role = $2 where id = $1 returning id, username, email, role`,
+    [id, role]
+  );
+  return r.rows[0] || null;
+}
+
 };

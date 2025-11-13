@@ -35,5 +35,20 @@ export const UserController = {
   async deleteByAdmin(req, res) {
     await UserModel.deleteById(req.params.id);
     return res.json({ message: 'Utilisateur supprimé par admin' });
+  },
+  
+  async updateRole(req, res) {
+  const { id } = req.params;
+  const { role } = req.body;
+  const validRoles = ['user', 'moderateur', 'admin'];
+  if (!validRoles.includes(role)) {
+    return res.status(400).json({ message: 'Rôle invalide' });
   }
+  const updated = await UserModel.updateRole(id, role);
+  if (!updated) return res.status(404).json({ message: 'Utilisateur introuvable' });
+  return res.json({ message: `Rôle mis à jour en ${role}`, user: updated });
+  }
+
 };
+
+
