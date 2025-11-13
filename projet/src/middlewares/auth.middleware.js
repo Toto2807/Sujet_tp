@@ -67,3 +67,5 @@ export async function authMiddleware(req, res, next) {
     return res.status(500).json({ message: 'Erreur serveur (auth)', detail: err && err.message });
   }
 }
+
+
