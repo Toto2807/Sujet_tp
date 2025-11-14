@@ -1,34 +1,43 @@
-import {pool} from '../config/db.js';
+import { pool } from '../config/db.js';
 
-class History {
-  static async addOrUpdate(user_id, manga_id, last_chapter_id) {
-    const query = `
-      INSERT INTO history (user_id, manga_id, last_chapter_id)
-      VALUES ($1, $2, $3)
-      ON CONFLICT (user_id, manga_id)
-      DO UPDATE SET last_chapter_id = EXCLUDED.last_chapter_id, updated_at = now()
-      RETURNING *;
-    `;
-    const values = [user_id, manga_id, last_chapter_id];
-    const { rows } = await pool.query(query, values);
-    return rows[0];
-  }
-
-  static async findByUser(user_id) {
-    const { rows } = await pool.query(
-      'SELECT * FROM history WHERE user_id = $1 ORDER BY updated_at DESC',
-      [user_id]
+export const HistoryModel = {
+  async get(userId, mangaId) {
+    const r = await pool.query(
+      `select user_id, manga_id, last_chapter_id, updated_at
+       from history
+       where user_id = $1 and manga_id = $2`,
+      [userId, mangaId]
     );
-    return rows;
-  }
+    return r.rows[0] || null;
+  },
 
-  static async delete(user_id, manga_id) {
-    await pool.query(
-      'DELETE FROM history WHERE user_id = $1 AND manga_id = $2',
-      [user_id, manga_id]
+  async upsert(userId, mangaId, lastChapterId) {
+    const r = await pool.query(
+      `insert into history (user_id, manga_id, last_chapter_id, updated_at)
+       values ($1,$2,$3, now())
+       on conflict (user_id, manga_id)
+       do update set last_chapter_id = excluded.last_chapter_id, updated_at = now()
+       returning user_id, manga_id, last_chapter_id, updated_at`,
+      [userId, mangaId, lastChapterId]
     );
+    return r.rows[0];
+  },
+
+  async listByUser(userId) {
+    const r = await pool.query(
+      `select h.user_id, h.manga_id, h.last_chapter_id, h.updated_at,
+              m.title, m.cover_url
+       from history h
+       join manga m on m.id = h.manga_id
+       where h.user_id = $1
+       order by h.updated_at desc`,
+      [userId]
+    );
+    return r.rows;
+  },
+
+  async remove(userId, mangaId) {
+    await pool.query(`delete from history where user_id = $1 and manga_id = $2`, [userId, mangaId]);
     return true;
   }
-}
-
-export default History;
+};

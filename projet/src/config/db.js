@@ -1,26 +1,21 @@
-import pkg from 'pg';
 import dotenv from 'dotenv';
+import pkg from 'pg';
 dotenv.config();
 const { Pool } = pkg;
-
-console.log('DEBUG env DATABASE_URL =', process.env.DATABASE_URL);
 
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-async function testConnection() {
+export async function pgHealthcheck() {
+  const c = await pool.connect();
   try {
-    const c = await pool.connect();
-    const r = await c.query('SELECT current_database() AS db, current_schema() AS schema, count(*)::int AS users_count FROM users');
-    console.log('✅ PostgreSQL connecté — info:', r.rows[0]);
+    const r = await c.query(`select current_database() as db, current_schema() as schema`);
+    return r.rows[0];
+  } finally {
     c.release();
-  } catch (err) {
-    console.error('❌ Erreur de connexion ou requête test:', err.message || err);
   }
 }
-
-testConnection();
 
 process.on('exit', () => {
   pool.end();

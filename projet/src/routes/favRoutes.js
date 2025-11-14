@@ -1,4 +1,4 @@
-import Router from 'router';
+import { Router } from 'express';
 import { getMyFavs, addToFav, removeFromFav } from '../controllers/favController.js';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
 
