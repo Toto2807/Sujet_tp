@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "swagger": "node src/docs/swagger.gen.js"
+    "swagger": "node src/docs/swagger.gen.js",
+    "test": "jest",
+    "test:app": "node --experimental-vm-modules node_modules/jest/bin/jest.js app.test.mjs --runInBand --detectOpenHandles --forceExit --testTimeout=30000"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -25,9 +27,15 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "babel-jest": "^30.2.0",
     "cross-env": "^10.1.0",
     "jest": "^30.2.0",
     "nodemon": "^3.0.1",
     "supertest": "^7.1.4"
+  },
+  "jest": {
+    "testEnvironment": "node"
   }
 }
