@@ -38,6 +38,7 @@ app.use(apiLimiter);
 
 app.get('/', (req, res) => res.json({ status: 'ok' }));
 
+
 const docsDir = path.resolve(process.cwd(), 'src', 'docs');
 const swaggerPath = path.join(docsDir, 'swagger.json');
 
@@ -49,6 +50,7 @@ console.log('DEBUG Swagger -> exists(swagger.json):', fs.existsSync(swaggerPath)
 app.use('/docs', express.static(docsDir, { extensions: ['json', 'yaml', 'yml'] }));
 
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(null, { swaggerUrl: '/docs/swagger.json' }));
+
 
 
 app.use('/api', authRoutes);
