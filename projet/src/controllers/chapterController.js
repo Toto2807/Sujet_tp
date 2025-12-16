@@ -1,8 +1,9 @@
 import { Chapter } from '../models/chapterModel.js';
+import xss from 'xss';
 
 export const ChapterController = {
   async list(req, res) {
-    const { manga_id } = req.query;
+    const manga_id = req.query.manga_id ? xss(req.query.manga_id) : null;
     const filter = manga_id ? { manga_id } : {};
     const data = await Chapter.find(filter).sort({ chap_number: 1 }).lean().exec();
     return res.json(data);
@@ -15,12 +16,22 @@ export const ChapterController = {
   },
 
   async create(req, res) {
-    const doc = await Chapter.create(req.body);
+    const sanitizedBody = { ...req.body };
+    if (sanitizedBody.title) {
+        sanitizedBody.title = xss(sanitizedBody.title);
+    }
+
+    const doc = await Chapter.create(sanitizedBody);
     return res.status(201).json(doc);
   },
 
   async update(req, res) {
-    const doc = await Chapter.findByIdAndUpdate(req.params.id, req.body, { new: true }).exec();
+    const sanitizedBody = { ...req.body };
+    if (sanitizedBody.title) {
+        sanitizedBody.title = xss(sanitizedBody.title);
+    }
+
+    const doc = await Chapter.findByIdAndUpdate(req.params.id, sanitizedBody, { new: true }).exec();
     if (!doc) return res.status(404).json({ message: 'Chapitre introuvable' });
     return res.json(doc);
   },

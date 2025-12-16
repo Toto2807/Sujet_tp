@@ -1,4 +1,5 @@
 import { UserModel } from '../models/userModel.js';
+import xss from 'xss';
 
 export const UserController = {
   async getAll(req, res) {
@@ -12,7 +13,11 @@ export const UserController = {
   },
 
   async updateMe(req, res) {
-    const updated = await UserModel.updateMe(req.user.id, { username: req.body.username, email: req.body.email });
+    const cleanUsername = req.body.username ? xss(req.body.username) : undefined;
+    const updated = await UserModel.updateMe(req.user.id, { 
+      username: cleanUsername, 
+      email: req.body.email 
+    });
     return res.json(updated);
   },
 
@@ -28,7 +33,13 @@ export const UserController = {
   },
 
   async createByAdmin(req, res) {
-    const u = await UserModel.create({ username: req.body.username, email: req.body.email, password: req.body.password, role: req.body.role || 'user' });
+    const cleanUsername = xss(req.body.username);
+    const u = await UserModel.create({ 
+      username: cleanUsername, 
+      email: req.body.email, 
+      password: req.body.password, 
+      role: req.body.role || 'user' 
+    });
     return res.status(201).json(u);
   },
 
@@ -38,37 +49,30 @@ export const UserController = {
   },
   
   async updateRole(req, res) {
-  const { id } = req.params;
-  const { role } = req.body;
-  const validRoles = ['user', 'moderateur', 'admin'];
-  if (!validRoles.includes(role)) {
-    return res.status(400).json({ message: 'Rôle invalide' });
-  }
-  const updated = await UserModel.updateRole(id, role);
-  if (!updated) return res.status(404).json({ message: 'Utilisateur introuvable' });
-  return res.json({ message: `Rôle mis à jour en ${role}`, user: updated });
+    const { id } = req.params;
+    const { role } = req.body;
+    const validRoles = ['user', 'moderateur', 'admin'];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ message: 'Rôle invalide' });
+    }
+    const updated = await UserModel.updateRole(id, role);
+    if (!updated) return res.status(404).json({ message: 'Utilisateur introuvable' });
+    return res.json({ message: `Rôle mis à jour`, user: updated });
   },
 
   async updateBanByAdmin(req, res) {
-  const { id } = req.params;
-  const { is_ban } = req.body;
-
-  if (typeof is_ban !== 'boolean') {
-    return res.status(400).json({ message: 'is_ban doit être un booléen' });
+    const { id } = req.params;
+    const { is_ban } = req.body;
+    if (typeof is_ban !== 'boolean') {
+      return res.status(400).json({ message: 'is_ban doit être un booléen' });
+    }
+    const user = await UserModel.updateBan(id, is_ban);
+    if (!user) {
+      return res.status(404).json({ message: 'Utilisateur introuvable' });
+    }
+    return res.json({
+      message: is_ban ? 'Utilisateur banni' : 'Utilisateur débanni',
+      user
+    });
   }
-
-  const user = await UserModel.updateBan(id, is_ban);
-  if (!user) {
-    return res.status(404).json({ message: 'Utilisateur introuvable' });
-  }
-
-  return res.json({
-    message: is_ban ? 'Utilisateur banni' : 'Utilisateur débanni',
-    user
-  });
-}
-
-
 };
-
-

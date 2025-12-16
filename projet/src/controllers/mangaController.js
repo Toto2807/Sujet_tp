@@ -1,5 +1,6 @@
 import { MangaModel } from '../models/mangaModel.js';
 import { z } from 'zod';
+import xss from 'xss';
 
 const createSchema = z.object({
   body: z.object({
@@ -30,7 +31,8 @@ export const MangaController = {
   validate: { createSchema, updateSchema },
 
   async getAll(req, res) {
-    const list = await MangaModel.list({ search: req.query.q });
+    const searchQuery = req.query.q ? xss(req.query.q) : undefined;
+    const list = await MangaModel.list({ search: searchQuery });
     return res.json(list);
   },
 
@@ -41,12 +43,29 @@ export const MangaController = {
   },
 
   async create(req, res) {
-    const created = await MangaModel.create(req.body);
+    const sanitizedBody = {
+      ...req.body,
+      title: xss(req.body.title),
+      description: req.body.description ? xss(req.body.description) : undefined,
+      author: req.body.author ? xss(req.body.author) : undefined,
+      artist: req.body.artist ? xss(req.body.artist) : undefined,
+      // Les tags sont un tableau, on nettoie chaque élément
+      tags: req.body.tags ? req.body.tags.map(t => xss(t)) : undefined
+    };
+
+    const created = await MangaModel.create(sanitizedBody);
     return res.status(201).json(created);
   },
 
   async update(req, res) {
-    const updated = await MangaModel.update(req.params.id, req.body);
+    const sanitizedBody = { ...req.body };
+    if (sanitizedBody.title) sanitizedBody.title = xss(sanitizedBody.title);
+    if (sanitizedBody.description) sanitizedBody.description = xss(sanitizedBody.description);
+    if (sanitizedBody.author) sanitizedBody.author = xss(sanitizedBody.author);
+    if (sanitizedBody.artist) sanitizedBody.artist = xss(sanitizedBody.artist);
+    if (sanitizedBody.tags) sanitizedBody.tags = sanitizedBody.tags.map(t => xss(t));
+
+    const updated = await MangaModel.update(req.params.id, sanitizedBody);
     if (!updated) return res.status(404).json({ message: 'Manga introuvable' });
     return res.json(updated);
   },

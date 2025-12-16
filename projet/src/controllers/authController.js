@@ -1,6 +1,7 @@
 import { UserModel } from '../models/userModel.js';
 import { hashPassword, verifyPassword, signTokens, verifyRefresh } from '../services/auth.service.js';
 import { z } from 'zod';
+import xss from 'xss';
 
 export const AuthSchemas = {
   register: z.object({
@@ -16,11 +17,8 @@ export const AuthSchemas = {
       password: z.string().min(6)
     })
   }),
-  refresh: z.object({
-
-  })
+  refresh: z.object({})
 };
-
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -31,15 +29,14 @@ const COOKIE_OPTIONS = {
 export const AuthController = {
   async register(req, res) {
     const { username, email, password } = req.body;
+    const sanitizedUsername = xss(username);
     const existing = await UserModel.findByEmail(email);
-    
-
     if (existing)
       return res.status(409).json({ message: "Email déjà utilisé" });
 
     const pwd = await hashPassword(password);
     const user = await UserModel.create({
-      username,
+      username: sanitizedUsername,
       email,
       password: pwd,
       role: "user",
@@ -47,9 +44,8 @@ export const AuthController = {
     
     const tokens = signTokens(user);
 
-
-    res.cookie('access_token', tokens.access, { ...COOKIE_OPTIONS, maxAge: 15 * 60 * 1000 }); // 15min
-    res.cookie('refresh_token', tokens.refresh, { ...COOKIE_OPTIONS, maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7 jours
+    res.cookie('access_token', tokens.access, { ...COOKIE_OPTIONS, maxAge: 15 * 60 * 1000 });
+    res.cookie('refresh_token', tokens.refresh, { ...COOKIE_OPTIONS, maxAge: 7 * 24 * 60 * 60 * 1000 });
 
     return res.status(201).json({
       message: "Inscription réussie",
@@ -67,18 +63,15 @@ export const AuthController = {
     const { email, password } = req.body;
     const user = await UserModel.findByEmail(email);
 
-
     let isValid = false;
     if (user) {
       isValid = await verifyPassword(password, user.password);
     }
-
     if (!isValid || !user) {
       return res.status(401).json({ message: "Identifiants invalides" });
     }
 
     const tokens = signTokens(user);
-
 
     res.cookie('access_token', tokens.access, { ...COOKIE_OPTIONS, maxAge: 15 * 60 * 1000 });
     res.cookie('refresh_token', tokens.refresh, { ...COOKIE_OPTIONS, maxAge: 7 * 24 * 60 * 60 * 1000 });
@@ -97,7 +90,6 @@ export const AuthController = {
 
   async refresh(req, res) {
     try {
-
       const refresh_token = req.cookies.refresh_token;
       
       if (!refresh_token) {
@@ -108,15 +100,12 @@ export const AuthController = {
       const user = await UserModel.getById(payload.sub);
       
       if (!user) {
-
         res.clearCookie('access_token');
         res.clearCookie('refresh_token');
         return res.status(401).json({ message: "Utilisateur inconnu" });
       }
 
       const tokens = signTokens(user);
-      
-
       res.cookie('access_token', tokens.access, { ...COOKIE_OPTIONS, maxAge: 15 * 60 * 1000 });
       
       return res.json({ message: "Session rafraîchie" });
