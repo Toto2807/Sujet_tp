@@ -4,8 +4,8 @@ import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import path from 'node:path';
-import fs from 'node:fs';
 import swaggerUi from 'swagger-ui-express';
+import cookieParser from 'cookie-parser';
 
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -21,37 +21,28 @@ dotenv.config();
 
 const app = express();
 
-
-const isDev = process.env.NODE_ENV !== 'production';
-
-app.use(
-  helmet({
-    hsts: isDev ? false : { maxAge: 31536000, includeSubDomains: true },
-    contentSecurityPolicy: isDev ? false : undefined,
-  })
-);
+app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({ origin: process.env.CORS_ORIGINS?.split(' ') || '*' }));
+app.use(cookieParser());
+
+app.use(cors({ 
+  origin: process.env.CORS_ORIGINS?.split(' ') || 'http://localhost:3000', 
+  credentials: true 
+}));
 app.use(morgan('dev'));
 app.use(apiLimiter);
 
 app.get('/', (req, res) => res.json({ status: 'ok' }));
 
-
-const docsDir = path.resolve(process.cwd(), 'src', 'docs');
-const swaggerPath = path.join(docsDir, 'swagger.json');
-
-console.log('DEBUG Swagger -> docsDir:', docsDir);
-console.log('DEBUG Swagger -> swaggerPath:', swaggerPath);
-console.log('DEBUG Swagger -> exists(docsDir):', fs.existsSync(docsDir));
-console.log('DEBUG Swagger -> exists(swagger.json):', fs.existsSync(swaggerPath));
-
-app.use('/docs', express.static(docsDir, { extensions: ['json', 'yaml', 'yml'] }));
-
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(null, { swaggerUrl: '/docs/swagger.json' }));
-
-
+let swaggerDoc = null;
+try {
+  const p = path.resolve('src/docs/swagger.json');
+  if (fs.existsSync(p)) swaggerDoc = JSON.parse(fs.readFileSync(p, 'utf-8'));
+} catch (_) {}
+if (swaggerDoc) {
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
+}
 
 app.use('/api', authRoutes);
 app.use('/api/users', userRoutes);

@@ -17,18 +17,26 @@ export const AuthSchemas = {
     })
   }),
   refresh: z.object({
-    body: z.object({
-      refresh_token: z.string().min(10)
-    })
+
   })
+};
+
+
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
 };
 
 export const AuthController = {
   async register(req, res) {
     const { username, email, password } = req.body;
     const existing = await UserModel.findByEmail(email);
+    
+
     if (existing)
       return res.status(409).json({ message: "Email déjà utilisé" });
+
     const pwd = await hashPassword(password);
     const user = await UserModel.create({
       username,
@@ -36,52 +44,92 @@ export const AuthController = {
       password: pwd,
       role: "user",
     });
+    
     const tokens = signTokens(user);
+
+
+    res.cookie('access_token', tokens.access, { ...COOKIE_OPTIONS, maxAge: 15 * 60 * 1000 }); // 15min
+    res.cookie('refresh_token', tokens.refresh, { ...COOKIE_OPTIONS, maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7 jours
+
     return res.status(201).json({
+      message: "Inscription réussie",
       user: {
         id: user.id,
         username: user.username,
         email: user.email,
         role: user.role,
         is_ban: user.is_ban,
-      },
-      tokens,
+      }
     });
   },
 
   async login(req, res) {
     const { email, password } = req.body;
     const user = await UserModel.findByEmail(email);
-    if (!user)
+
+
+    let isValid = false;
+    if (user) {
+      isValid = await verifyPassword(password, user.password);
+    }
+
+    if (!isValid || !user) {
       return res.status(401).json({ message: "Identifiants invalides" });
-    const ok = await verifyPassword(password, user.password);
-    if (!ok) return res.status(401).json({ message: "Identifiants invalides" });
+    }
+
     const tokens = signTokens(user);
+
+
+    res.cookie('access_token', tokens.access, { ...COOKIE_OPTIONS, maxAge: 15 * 60 * 1000 });
+    res.cookie('refresh_token', tokens.refresh, { ...COOKIE_OPTIONS, maxAge: 7 * 24 * 60 * 60 * 1000 });
+
     return res.json({
+      message: "Connexion réussie",
       user: {
         id: user.id,
         username: user.username,
         email: user.email,
         role: user.role,
         is_ban: user.is_ban,
-      },
-      tokens,
+      }
     });
   },
 
   async refresh(req, res) {
     try {
-      const { refresh_token } = req.body;
+
+      const refresh_token = req.cookies.refresh_token;
+      
+      if (!refresh_token) {
+        return res.status(401).json({ message: "Non authentifié" });
+      }
+
       const payload = verifyRefresh(refresh_token);
       const user = await UserModel.getById(payload.sub);
-      if (!user)
+      
+      if (!user) {
+
+        res.clearCookie('access_token');
+        res.clearCookie('refresh_token');
         return res.status(401).json({ message: "Utilisateur inconnu" });
+      }
+
       const tokens = signTokens(user);
-      return res.json({ tokens });
+      
+
+      res.cookie('access_token', tokens.access, { ...COOKIE_OPTIONS, maxAge: 15 * 60 * 1000 });
+      
+      return res.json({ message: "Session rafraîchie" });
     } catch (e) {
-      return res
-        .status(401)
-        .json({ message: "Refresh token invalide ou expiré" });
+      res.clearCookie('access_token');
+      res.clearCookie('refresh_token');
+      return res.status(401).json({ message: "Session expirée" });
     }
   },
+
+  async logout(req, res) {
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
+    return res.json({ message: "Déconnexion réussie" });
+  }
 };
