@@ -1,0 +1,1446 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Scan API",
+    "version": "1.0.0",
+    "description": "API REST du projet Scan (Express + PostgreSQL + MongoDB). - Auth : JWT (access/refresh) + rôles (user, moderateur, admin) - SQL : users, manga, fav, history - Mongo : chapters\n"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Users"
+    },
+    {
+      "name": "Manga"
+    },
+    {
+      "name": "Chapters"
+    },
+    {
+      "name": "Favs"
+    },
+    {
+      "name": "History"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "stack": {
+            "type": "string"
+          }
+        }
+      },
+      "Role": {
+        "type": "string",
+        "enum": [
+          "user",
+          "moderateur",
+          "admin"
+        ]
+      },
+      "Tokens": {
+        "type": "object",
+        "properties": {
+          "access": {
+            "type": "string",
+            "description": "JWT d'accès"
+          },
+          "refresh": {
+            "type": "string",
+            "description": "JWT de refresh"
+          }
+        },
+        "required": [
+          "access",
+          "refresh"
+        ]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "is_ban": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email",
+          "role"
+        ]
+      },
+      "UserCreateAdmin": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "required": [
+          "username",
+          "email",
+          "password"
+        ]
+      },
+      "AuthRegisterRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 3
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6
+          }
+        },
+        "required": [
+          "username",
+          "email",
+          "password"
+        ]
+      },
+      "AuthLoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "AuthRefreshRequest": {
+        "type": "object",
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "minLength": 10
+          }
+        },
+        "required": [
+          "refresh_token"
+        ]
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "tokens": {
+            "$ref": "#/components/schemas/Tokens"
+          }
+        }
+      },
+      "Manga": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "author": {
+            "type": "string",
+            "nullable": true
+          },
+          "artist": {
+            "type": "string",
+            "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cover_url": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ]
+      },
+      "MangaCreate": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "artist": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cover_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "MangaUpdate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MangaCreate"
+          }
+        ]
+      },
+      "ChapterPage": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "image_url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "index",
+          "image_url"
+        ]
+      },
+      "Chapter": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "ObjectId (string)"
+          },
+          "manga_id": {
+            "type": "string",
+            "description": "UUID de MANGA (stocké en string)"
+          },
+          "chap_number": {
+            "type": "number"
+          },
+          "chap_title": {
+            "type": "string"
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChapterPage"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "manga_id",
+          "chap_number",
+          "pages"
+        ]
+      },
+      "ChapterCreate": {
+        "type": "object",
+        "properties": {
+          "manga_id": {
+            "type": "string"
+          },
+          "chap_number": {
+            "type": "number"
+          },
+          "chap_title": {
+            "type": "string"
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChapterPage"
+            }
+          }
+        },
+        "required": [
+          "manga_id",
+          "chap_number",
+          "pages"
+        ]
+      },
+      "ChapterUpdate": {
+        "type": "object",
+        "properties": {
+          "chap_title": {
+            "type": "string"
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChapterPage"
+            }
+          }
+        }
+      },
+      "FavAdd": {
+        "type": "object",
+        "properties": {
+          "id_manga": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id_manga"
+        ]
+      },
+      "History": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "manga_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "last_chapter_id": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "cover_url": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "user_id",
+          "manga_id",
+          "last_chapter_id"
+        ]
+      },
+      "HistoryUpsert": {
+        "type": "object",
+        "properties": {
+          "manga_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "last_chapter_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "manga_id",
+          "last_chapter_id"
+        ]
+      }
+    }
+  },
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Inscription",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Compte créé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflit (email déjà utilisé)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Connexion",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthLoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Identifiants invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Rafraîchir l'access token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRefreshRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tokens": {
+                      "$ref": "#/components/schemas/Tokens"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide/expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/me": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Mon profil",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Mettre à jour mon profil",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Non authentifié"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Supprimer mon compte",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Non authentifié"
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Obtenir un utilisateur (public)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "id invalide"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/users/admin/total": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Liste complète des utilisateurs (admin)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé (admin requis)"
+          }
+        }
+      }
+    },
+    "/users/admin": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Créer un utilisateur (admin)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreateAdmin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Créé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé"
+          }
+        }
+      }
+    },
+    "/users/admin/{id}": {
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Supprimer un utilisateur (admin)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Accès refusé"
+          }
+        }
+      }
+    },
+    "/users/admin/role/{id}": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Changer le rôle d’un utilisateur (admin)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "$ref": "#/components/schemas/Role"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Rôle invalide"
+          },
+          "403": {
+            "description": "Accès refusé"
+          },
+          "404": {
+            "description": "Utilisateur introuvable"
+          }
+        }
+      }
+    },
+    "/manga": {
+      "get": {
+        "tags": [
+          "Manga"
+        ],
+        "summary": "Lister les mangas",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Recherche par titre"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Manga"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Manga"
+        ],
+        "summary": "Créer un manga (admin)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MangaCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Créé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Manga"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé"
+          }
+        }
+      }
+    },
+    "/manga/{id}": {
+      "get": {
+        "tags": [
+          "Manga"
+        ],
+        "summary": "Obtenir un manga",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Manga"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Manga"
+        ],
+        "summary": "Mettre à jour un manga (admin/moderateur)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MangaUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Accès refusé"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Manga"
+        ],
+        "summary": "Supprimer un manga (admin)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Supprimé"
+          },
+          "403": {
+            "description": "Accès refusé"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/chapters": {
+      "get": {
+        "tags": [
+          "Chapters"
+        ],
+        "summary": "Lister les chapitres d’un manga",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "manga_id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "UUID de l'œuvre (ou utiliser `mangaId`)"
+          },
+          {
+            "in": "query",
+            "name": "mangaId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Alias de `manga_id`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Chapter"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Chapters"
+        ],
+        "summary": "Créer un chapitre (admin/moderateur)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChapterCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Créé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Chapter"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé"
+          }
+        }
+      }
+    },
+    "/chapters/{id}": {
+      "get": {
+        "tags": [
+          "Chapters"
+        ],
+        "summary": "Obtenir un chapitre par son id Mongo",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Chapter"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Chapters"
+        ],
+        "summary": "Mettre à jour un chapitre (admin/moderateur)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChapterUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Accès refusé"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Chapters"
+        ],
+        "summary": "Supprimer un chapitre (admin)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Supprimé"
+          },
+          "403": {
+            "description": "Accès refusé"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/favs": {
+      "get": {
+        "tags": [
+          "Favs"
+        ],
+        "summary": "Mes favoris",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "cover_url": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Favs"
+        ],
+        "summary": "Ajouter aux favoris",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FavAdd"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Ajouté"
+          },
+          "404": {
+            "description": "Manga introuvable"
+          }
+        }
+      }
+    },
+    "/favs/{manga_id}": {
+      "delete": {
+        "tags": [
+          "Favs"
+        ],
+        "summary": "Retirer des favoris",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "manga_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retiré"
+          }
+        }
+      }
+    },
+    "/history": {
+      "get": {
+        "tags": [
+          "History"
+        ],
+        "summary": "Mon historique",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/History"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "History"
+        ],
+        "summary": "Upsert progression de lecture",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HistoryUpsert"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Créé/Mis à jour",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/History"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Manga introuvable"
+          }
+        }
+      }
+    },
+    "/history/{manga_id}": {
+      "get": {
+        "tags": [
+          "History"
+        ],
+        "summary": "Obtenir ma progression sur un manga",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "manga_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/History"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "History"
+        ],
+        "summary": "Supprimer ma progression sur un manga",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "manga_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Supprimé"
+          }
+        }
+      }
+    }
+  }
+}
