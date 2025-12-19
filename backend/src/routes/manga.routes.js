@@ -7,7 +7,7 @@ const router = Router();
 
 router.post("/", auth, requireRoles(["admin"]), MangaController.create);
 
-router.get("/", auth, requireRoles(["user"]), MangaController.read);
+router.get("/", auth, requireRoles(["user", "admin"]), MangaController.read);
 
 router.get("/:id", auth, requireRoles(["user"]), MangaController.readById);
 

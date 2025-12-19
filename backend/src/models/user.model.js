@@ -1,8 +1,9 @@
 import { pool } from "../config/db.postgres.js";
+import bcrypt from "bcrypt";
 
 export class User {
     static async create({ username, email, password, role = "user" }) {
-        const nHash = Number(process.env.PASSWORD_HASH_ROUNDS);
+        const nHash = Number(process.env.BCRYPT_SALT_ROUNDS) || 10;
         const hashed = await bcrypt.hash(password, nHash);
 
         const result = await pool.query(
@@ -17,7 +18,7 @@ export class User {
     static async read() {
         const result = await pool.query(
             `SELECT *
-            FROM users`
+             FROM users`
         );
         return result.rows;
     }
@@ -42,7 +43,7 @@ export class User {
         return result.rows[0];
     }
 
-    static async update(id, { username, email, role, isBanned }) {
+    static async updateById(id, { username, email, role, isBanned }) {
         const result = await pool.query(
             `UPDATE users
              SET username = $1, email = $2, role = $3, is_banned = $4
@@ -53,7 +54,7 @@ export class User {
         return result.rows[0];
     }
 
-    static async delete(id) {
+    static async deleteById(id) {
         const result = await pool.query(
             `DELETE FROM users
              WHERE id = $1

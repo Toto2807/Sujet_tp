@@ -11,8 +11,8 @@ router.get("/", auth, requireRoles(["admin"]), UserController.read);
 
 router.get("/:id", auth, requireRoles(["admin"]), UserController.readById);
 
-router.put("/:id", auth, requireRoles(["user"]), UserController.updateById);
+router.put("/:id", auth, requireRoles(["admin"]), UserController.updateById);
 
-router.delete("/:id", auth, requireRoles(["user"]), UserController.deleteById);
+router.delete("/:id", auth, requireRoles(["admin"]), UserController.deleteById);
 
 export default router;

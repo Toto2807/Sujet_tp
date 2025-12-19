@@ -1,9 +1,13 @@
 export function requireRoles(roles = []) {
     return (req, res, next) => {
-        if (!req.user?.role)
-            return res.status(401).json({ message: "Non authentifié" });
-        if (!roles.includes(req.user.role))
-            return res.status(403).json({ message: "Accès refusé" });
+        if (!req.user?.role) {
+            return res.status(401).json({ message: "Not authenticated" });
+        }
+
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({ message: "Access denied" });
+        }
+
         next();
     };
 }

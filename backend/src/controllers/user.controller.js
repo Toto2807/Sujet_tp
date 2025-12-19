@@ -50,15 +50,19 @@ export class UserController {
     static async updateById(req, res) {
         try {
             const id = Number(req.params.id);
-            const { username, email } = req.body;
+            const { username, email, role, is_banned } = req.body;
 
             const cleanedUsername = username ? xss(username) : undefined;
             const cleanedEmail = email ? xss(email) : undefined;
+            const cleanedRole = role ? xss(role) : undefined;
 
             const user = await User.updateById(id, {
-                cleanedUsername,
-                cleanedEmail,
+                username: cleanedUsername,
+                email: cleanedEmail,
+                role: cleanedRole,
+                isBanned: is_banned,
             });
+
             if (!user) {
                 return res.status(404).json({ error: "User not found" });
             }

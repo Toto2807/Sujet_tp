@@ -4,9 +4,9 @@ import { auth } from "../middlewares/auth.js";
 
 const router = Router();
 
-router.post("/register", auth, AuthController.register);
+router.post("/register", AuthController.register);
 
-router.post("/login", auth, AuthController.login);
+router.post("/login", AuthController.login);
 
 router.post("/refresh", auth, AuthController.refresh);
 

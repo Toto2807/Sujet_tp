@@ -1,10 +1,10 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
-const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
+const ACCESS_SECRET = process.env.JWT_SECRET;
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
-const ACCESS_EXPIRES = process.env.JWT_ACCESS_EXPIRES || "15m";
-const REFRESH_EXPIRES = process.env.JWT_REFRESH_EXPIRES || "7d";
+const ACCESS_EXPIRES = process.env.JWT_EXPIRES_IN || "15m";
+const REFRESH_EXPIRES = process.env.JWT_EXIRES_IN_REFRESH || "7d";
 
 export async function hashPassword(plain) {
     return bcrypt.hash(plain, 10);
