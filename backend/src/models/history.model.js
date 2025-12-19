@@ -1,12 +1,12 @@
 import { pool } from "../config/db.postgres.js";
 
 export class History {
-    static async create({ user_id, manga_id, last_chapter_id }) {
+    static async create({ userId, mangaId, lastChapterId }) {
         const result = await pool.query(
             `INSERT INTO histories (user_id, manga_id, last_chapter_id, updated_at)
              VALUES ($1, $2, $3, now())
              RETURNING *`,
-            [user_id, manga_id, last_chapter_id]
+            [userId, mangaId, lastChapterId]
         );
         return result.rows[0];
     }
@@ -41,13 +41,13 @@ export class History {
         return result.rows;
     }
 
-    static async updateById(id, { last_chapter_id }) {
+    static async updateById(id, { lastChapterId }) {
         const result = await pool.query(
             `UPDATE histories
              SET last_chapter_id = $1
              WHERE id = $2
              RETURNING *`,
-            [last_chapter_id, id]
+            [lastChapterId, id]
         );
         return result.rows[0];
     }

@@ -7,14 +7,14 @@ export class Manga {
         author,
         artist,
         tags,
-        cover_url,
-        published_at,
+        coverUrl,
+        publishedAt,
     }) {
         const result = await pool.query(
             `INSERT INTO mangas (title, description, author, artist, tags, cover_url, published_at)
              VALUES ($1, $2, $3, $4, $5, $6, $7)
              RETURNING *`,
-            [title, description, author, artist, tags, cover_url, published_at]
+            [title, description, author, artist, tags, coverUrl, publishedAt]
         );
         return result.rows[0];
     }
@@ -50,7 +50,7 @@ export class Manga {
 
     static async updateById(
         id,
-        { title, description, author, artist, tags, cover_url, published_at }
+        { title, description, author, artist, tags, coverUrl, publishedAt }
     ) {
         const result = await pool.query(
             `UPDATE mangas
@@ -63,8 +63,8 @@ export class Manga {
                 author,
                 artist,
                 tags,
-                cover_url,
-                published_at,
+                coverUrl,
+                publishedAt,
                 id,
             ]
         );

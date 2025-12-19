@@ -1,11 +1,20 @@
-export function requireRoles(roles = []) {
+export const ROLES = {
+    ADMIN: "admin",
+    USER: "user",
+};
+
+export function requireRoles(...allowedRoles) {
     return (req, res, next) => {
-        if (!req.user?.role) {
-            return res.status(401).json({ message: "Not authenticated" });
+        if (!req.user) {
+            return res.status(401).json({ error: "Authentication required" });
         }
 
-        if (!roles.includes(req.user.role)) {
-            return res.status(403).json({ message: "Access denied" });
+        const userRole = req.user.role;
+        const hasAccess =
+            allowedRoles.includes(userRole) || userRole === ROLES.ADMIN;
+
+        if (!hasAccess) {
+            return res.status(403).json({ error: "Access denied" });
         }
 
         next();

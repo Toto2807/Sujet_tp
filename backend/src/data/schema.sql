@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS users (
     id         SERIAL       PRIMARY KEY,
     username   VARCHAR(100) NOT NULL UNIQUE,
     email      VARCHAR(100) NOT NULL UNIQUE,
-    password   VARCHAR(100) NOT NULL,
+    password   VARCHAR(255) NOT NULL,
     role       VARCHAR(50)  NOT NULL DEFAULT 'user' CHECK (role in ('user', 'admin')),
     is_banned  BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ  NOT NULL DEFAULT now(),
@@ -11,12 +11,12 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS mangas (
     id          SERIAL       PRIMARY KEY,
-    title       VARCHAR(100) NOT NULL UNIQUE,
+    title       VARCHAR(255) NOT NULL UNIQUE,
     description TEXT         NOT NULL,
     author      VARCHAR(100) NOT NULL,
     artist      VARCHAR(100) NOT NULL,
     tags        TEXT[],
-    cover_url   VARCHAR(100) NOT NULL,
+    cover_url   TEXT         NOT NULL,
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
 
@@ -27,9 +27,9 @@ CREATE TABLE IF NOT EXISTS favs (
 );
 
 CREATE TABLE IF NOT EXISTS histories (
-    user_id         SERIAL NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    manga_id        SERIAL NOT NULL REFERENCES mangas(id) ON DELETE CASCADE,
-    last_chapter_id SERIAL NOT NULL,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    manga_id        INTEGER NOT NULL REFERENCES mangas(id) ON DELETE CASCADE,
+    last_chapter_id INTEGER NOT NULL,
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (user_id, manga_id)
 );
