@@ -3,8 +3,8 @@ import { pool } from "../config/db.postgres.js";
 export class History {
     static async create({ userId, mangaId, lastChapterId }) {
         const result = await pool.query(
-            `INSERT INTO histories (user_id, manga_id, last_chapter_id, updated_at)
-             VALUES ($1, $2, $3, now())
+            `INSERT INTO histories (user_id, manga_id, last_chapter_id)
+             VALUES ($1, $2, $3)
              RETURNING *`,
             [userId, mangaId, lastChapterId]
         );

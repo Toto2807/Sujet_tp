@@ -1,3 +1,11 @@
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TABLE IF NOT EXISTS users (
     id         SERIAL       PRIMARY KEY,
     username   VARCHAR(100) NOT NULL UNIQUE,
@@ -17,13 +25,15 @@ CREATE TABLE IF NOT EXISTS mangas (
     artist      VARCHAR(100) NOT NULL,
     tags        TEXT[],
     cover_url   TEXT         NOT NULL,
-    created_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS favs (
-    id_user  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    id_manga INTEGER NOT NULL REFERENCES mangas(id) ON DELETE CASCADE,
-    PRIMARY KEY (id_user, id_manga)
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    manga_id   INTEGER NOT NULL REFERENCES mangas(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (user_id, manga_id)
 );
 
 CREATE TABLE IF NOT EXISTS histories (
@@ -33,3 +43,18 @@ CREATE TABLE IF NOT EXISTS histories (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (user_id, manga_id)
 );
+
+CREATE TRIGGER trigger_users_updated_at
+    BEFORE UPDATE ON users
+    FOR EACH ROW
+    EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER trigger_mangas_updated_at
+    BEFORE UPDATE ON mangas
+    FOR EACH ROW
+    EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER trigger_histories_updated_at
+    BEFORE UPDATE ON histories
+    FOR EACH ROW
+    EXECUTE FUNCTION set_updated_at();
