@@ -5,19 +5,14 @@ import { requireRoles } from "../middlewares/roles.js";
 
 const router = Router();
 
-router.post("/", auth, requireRoles(["admin"]), MangaController.create);
+router.post("/", auth, requireRoles("admin"), MangaController.create);
 
-router.get("/", auth, requireRoles(["user", "admin"]), MangaController.read);
+router.get("/", auth, requireRoles("user", "admin"), MangaController.read);
 
-router.get("/:id", auth, requireRoles(["user"]), MangaController.readById);
+router.get("/:id", auth, requireRoles("user"), MangaController.readById);
 
-router.put("/:id", auth, requireRoles(["admin"]), MangaController.updateById);
+router.put("/:id", auth, requireRoles("admin"), MangaController.updateById);
 
-router.delete(
-    "/:id",
-    auth,
-    requireRoles(["admin"]),
-    MangaController.deleteById
-);
+router.delete("/:id", auth, requireRoles("admin"), MangaController.deleteById);
 
 export default router;

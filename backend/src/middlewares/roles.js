@@ -1,8 +1,3 @@
-export const ROLES = {
-    ADMIN: "admin",
-    USER: "user",
-};
-
 export function requireRoles(...allowedRoles) {
     return (req, res, next) => {
         if (!req.user) {
@@ -11,7 +6,7 @@ export function requireRoles(...allowedRoles) {
 
         const userRole = req.user.role;
         const hasAccess =
-            allowedRoles.includes(userRole) || userRole === ROLES.ADMIN;
+            allowedRoles.includes(userRole) || userRole === "admin";
 
         if (!hasAccess) {
             return res.status(403).json({ error: "Access denied" });

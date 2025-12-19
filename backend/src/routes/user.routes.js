@@ -5,14 +5,14 @@ import { requireRoles } from "../middlewares/roles.js";
 
 const router = Router();
 
-router.post("/", auth, requireRoles(["user"]), UserController.create);
+router.post("/", auth, requireRoles("user"), UserController.create);
 
-router.get("/", auth, requireRoles(["admin"]), UserController.read);
+router.get("/", auth, requireRoles("admin"), UserController.read);
 
-router.get("/:id", auth, requireRoles(["admin"]), UserController.readById);
+router.get("/:id", auth, requireRoles("admin"), UserController.readById);
 
-router.put("/:id", auth, requireRoles(["admin"]), UserController.updateById);
+router.put("/:id", auth, requireRoles("admin"), UserController.updateById);
 
-router.delete("/:id", auth, requireRoles(["admin"]), UserController.deleteById);
+router.delete("/:id", auth, requireRoles("admin"), UserController.deleteById);
 
 export default router;
