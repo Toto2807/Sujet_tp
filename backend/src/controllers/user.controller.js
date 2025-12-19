@@ -1,5 +1,4 @@
 import { User } from "../models/user.model.js";
-import xss from "xss";
 
 export class UserController {
     static async create(req, res) {
@@ -11,24 +10,19 @@ export class UserController {
                     .json({ error: "All fields are required" });
             }
 
-            const user = await User.create({
-                username,
-                email,
-                password,
-                role,
-            });
+            const user = await User.create({ username, email, password, role });
             return res.status(201).json(user);
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: err.message });
         }
     }
 
     static async read(req, res) {
         try {
             const users = await User.read();
-            res.status(200).json(users);
+            return res.status(200).json(users);
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: err.message });
         }
     }
 
@@ -41,9 +35,9 @@ export class UserController {
                 return res.status(404).json({ error: "User not found" });
             }
 
-            res.status(200).json(user);
+            return res.status(200).json(user);
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: err.message });
         }
     }
 
@@ -52,14 +46,10 @@ export class UserController {
             const id = Number(req.params.id);
             const { username, email, role, is_banned } = req.body;
 
-            const cleanedUsername = username ? xss(username) : undefined;
-            const cleanedEmail = email ? xss(email) : undefined;
-            const cleanedRole = role ? xss(role) : undefined;
-
             const user = await User.updateById(id, {
-                username: cleanedUsername,
-                email: cleanedEmail,
-                role: cleanedRole,
+                username,
+                email,
+                role,
                 isBanned: is_banned,
             });
 
@@ -67,9 +57,9 @@ export class UserController {
                 return res.status(404).json({ error: "User not found" });
             }
 
-            res.status(200).json(user);
+            return res.status(200).json(user);
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: err.message });
         }
     }
 
@@ -82,9 +72,9 @@ export class UserController {
                 return res.status(404).json({ error: "User not found" });
             }
 
-            res.status(204).send();
+            return res.status(204).send();
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: err.message });
         }
     }
 }

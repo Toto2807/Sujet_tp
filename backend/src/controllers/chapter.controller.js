@@ -4,24 +4,32 @@ import xss from "xss";
 export class ChapterController {
     static async create(req, res) {
         try {
-            const sanitizedBody = { ...req.body };
-            if (sanitizedBody.title) {
-                sanitizedBody.title = xss(sanitizedBody.title);
+            const { manga_id, number, title, pages } = req.body;
+            if (!manga_id || !number || !title || !pages) {
+                return res
+                    .status(400)
+                    .json({ error: "All fields are required" });
             }
 
-            const chapter = await Chapter.create(sanitizedBody);
-            res.status(201).json(chapter);
+            const chapter = await Chapter.create({
+                manga_id,
+                number,
+                title,
+                pages,
+            });
+
+            return res.status(201).json(chapter);
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: err.message });
         }
     }
 
     static async read(req, res) {
         try {
             const chapters = await Chapter.find();
-            res.status(200).json(chapters);
+            return res.status(200).json(chapters);
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: err.message });
         }
     }
 
@@ -34,32 +42,44 @@ export class ChapterController {
                 return res.status(404).json({ error: "Chapter not found" });
             }
 
-            res.status(200).json(chapter);
+            return res.status(200).json(chapter);
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: err.message });
         }
     }
 
     static async updateById(req, res) {
         try {
             const id = Number(req.params.id);
-            const sanitizedBody = { ...req.body };
+            const { manga_id, number, title, pages } = req.body;
 
-            if (sanitizedBody.title) {
-                sanitizedBody.title === xss(sanitizedBody.title);
+            if (!manga_id || !number || !title || !pages) {
+                return res
+                    .status(400)
+                    .json({ error: "All fields are required" });
             }
 
-            const chapter = await Chapter.findByIdAndUpdate(id, sanitizedBody, {
-                new: true,
-            });
+            const chapter = await Chapter.findByIdAndUpdate(
+                id,
+                {
+                    manga_id,
+                    number,
+                    title,
+                    pages,
+                },
+                {
+                    new: true,
+                    runValidators: true,
+                }
+            );
 
             if (!chapter) {
                 return res.status(404).json({ error: "Chapter not found" });
             }
 
-            res.status(200).json(chapter);
+            return res.status(200).json(chapter);
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: err.message });
         }
     }
 
@@ -72,9 +92,9 @@ export class ChapterController {
                 return res.status(404).json({ error: "Chapter not found" });
             }
 
-            res.status(204).send();
+            return res.status(204).send();
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: err.message });
         }
     }
 }

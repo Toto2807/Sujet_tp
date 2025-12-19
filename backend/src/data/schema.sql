@@ -1,7 +1,7 @@
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = now();
+    NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS users (
     password   VARCHAR(255) NOT NULL,
     role       VARCHAR(50)  NOT NULL DEFAULT 'user' CHECK (role in ('user', 'admin')),
     is_banned  BOOLEAN      NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ  NOT NULL DEFAULT now()
+    created_at TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS mangas (
@@ -25,14 +25,14 @@ CREATE TABLE IF NOT EXISTS mangas (
     artist      VARCHAR(100) NOT NULL,
     tags        TEXT[],
     cover_url   TEXT         NOT NULL,
-    created_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS favs (
     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     manga_id   INTEGER NOT NULL REFERENCES mangas(id) ON DELETE CASCADE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, manga_id)
 );
 
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS histories (
     user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     manga_id        INTEGER NOT NULL REFERENCES mangas(id) ON DELETE CASCADE,
     last_chapter_id INTEGER NOT NULL,
-    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, manga_id)
 );
 

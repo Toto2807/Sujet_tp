@@ -1,5 +1,5 @@
-import { pool } from "../config/db.postgres.js";
 import bcrypt from "bcrypt";
+import { pool } from "../config/db.postgres.js";
 
 export class User {
     static async create({ username, email, password, role = "user" }) {

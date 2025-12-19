@@ -1,35 +1,43 @@
 import { Manga } from "../models/manga.model.js";
-import xss from "xss";
 
 export class MangaController {
     static async create(req, res) {
         try {
-            const sanitizedBody = {
-                ...req.body,
-                title: xss(req.body.title),
-                description: req.body.description
-                    ? xss(req.body.description)
-                    : undefined,
-                author: req.body.author ? xss(req.body.author) : undefined,
-                artist: req.body.artist ? xss(req.body.artist) : undefined,
-                tags: req.body.tags
-                    ? req.body.tags.map((t) => xss(t))
-                    : undefined,
-            };
+            const { title, description, author, artist, tags, cover_url } =
+                req.body;
+            if (
+                !title ||
+                !description ||
+                !author ||
+                !artist ||
+                !tags ||
+                !cover_url
+            ) {
+                return res
+                    .status(400)
+                    .json({ error: "All fields are required" });
+            }
 
-            const manga = await Manga.create(sanitizedBody);
+            const manga = await Manga.create({
+                title,
+                description,
+                author,
+                artist,
+                tags,
+                coverUrl: cover_url,
+            });
             return res.status(201).json(manga);
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: err.message });
         }
     }
 
     static async read(req, res) {
         try {
             const mangas = await Manga.read();
-            res.status(200).json(mangas);
+            return res.status(200).json(mangas);
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: err.message });
         }
     }
 
@@ -42,34 +50,47 @@ export class MangaController {
                 return res.status(404).json({ error: "Manga not found" });
             }
 
-            res.status(200).json(manga);
+            return res.status(200).json(manga);
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: err.message });
         }
     }
 
     static async updateById(req, res) {
         try {
-            const sanitizedBody = { ...req.body };
-            if (sanitizedBody.title)
-                sanitizedBody.title = xss(sanitizedBody.title);
-            if (sanitizedBody.description)
-                sanitizedBody.description = xss(sanitizedBody.description);
-            if (sanitizedBody.author)
-                sanitizedBody.author = xss(sanitizedBody.author);
-            if (sanitizedBody.artist)
-                sanitizedBody.artist = xss(sanitizedBody.artist);
-            if (sanitizedBody.tags)
-                sanitizedBody.tags = sanitizedBody.tags.map((t) => xss(t));
+            const { title, description, author, artist, tags, cover_url } =
+                req.body;
 
-            const manga = await Manga.updateById(id, sanitizedBody);
+            if (
+                !title ||
+                !description ||
+                !author ||
+                !artist ||
+                !tags ||
+                !cover_url
+            ) {
+                return res
+                    .status(400)
+                    .json({ error: "All fields are required" });
+            }
+
+            const id = Number(req.params.id);
+            const manga = await Manga.updateById(id, {
+                title,
+                description,
+                author,
+                artist,
+                tags,
+                coverUrl: cover_url,
+            });
+
             if (!manga) {
                 return res.status(404).json({ error: "Manga not found" });
             }
 
-            res.status(200).json(manga);
+            return res.status(200).json(manga);
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: err.message });
         }
     }
 
@@ -82,9 +103,9 @@ export class MangaController {
                 return res.status(404).json({ error: "Manga not found" });
             }
 
-            res.status(204).send();
+            return res.status(204).send();
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: err.message });
         }
     }
 }

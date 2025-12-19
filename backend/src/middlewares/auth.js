@@ -9,6 +9,7 @@ export function auth(req, res, next) {
 
         const payload = verifyAccess(token);
         req.user = payload;
+
         next();
     } catch (err) {
         return res.status(401).json({ message: "Invalid or expired token" });

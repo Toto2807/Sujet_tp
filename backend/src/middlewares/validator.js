@@ -1,12 +1,26 @@
-export const validate = (schema) => (req, res, next) => {
-    const data = { body: req.body, params: req.params, query: req.query };
-    const parsed = schema.safeParse(data);
-    if (!parsed.success) {
-        return res.status(400).json({
-            message: "Validation error",
-            errors: parsed.error.flatten(),
-        });
+import { validationResult, param } from "express-validator";
+
+export const handleValidationErrors = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
     }
-    Object.assign(req, parsed.data);
+
     next();
 };
+
+export const validateId = [
+    param("id")
+        .isInt({ min: 1 })
+        .withMessage("Resource ID must be a positive integer"),
+];
+
+export const validateDoubleIds = [
+    param("user_id")
+        .isInt({ min: 1 })
+        .withMessage("Resource ID must be a positive integer"),
+
+    param("manga_id")
+        .isInt({ min: 1 })
+        .withMessage("Resource ID must be a positive integer"),
+];

@@ -19,11 +19,11 @@ const ChapterSchema = new mongoose.Schema(
             required: true,
             index: true,
         },
-        chap_number: {
+        number: {
             type: Number,
             required: true,
         },
-        chap_title: {
+        title: {
             type: String,
         },
         pages: {

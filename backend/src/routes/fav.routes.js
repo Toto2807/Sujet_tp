@@ -2,17 +2,51 @@ import { Router } from "express";
 import { FavController } from "../controllers/fav.controller.js";
 import { auth } from "../middlewares/auth.js";
 import { requireRoles } from "../middlewares/roles.js";
+import {
+    handleValidationErrors,
+    validateDoubleIds,
+} from "../middlewares/validator.js";
+import { validateFav } from "../middlewares/validators/fav.validator.js";
 
 const router = Router();
 
-router.post("/", auth, requireRoles("admin"), FavController.create);
+router.post(
+    "/",
+    auth,
+    requireRoles("admin"),
+    validateFav,
+    handleValidationErrors,
+    FavController.create
+);
 
 router.get("/", auth, requireRoles("admin"), FavController.read);
 
-router.get("/:id", auth, requireRoles("admin"), FavController.readById);
+router.get(
+    "/:user_id/:manga_id",
+    auth,
+    requireRoles("admin"),
+    validateDoubleIds,
+    handleValidationErrors,
+    FavController.readById
+);
 
-router.put("/:id", auth, requireRoles("admin"), FavController.updateById);
+router.put(
+    "/:user_id/:manga_id",
+    auth,
+    requireRoles("admin"),
+    validateDoubleIds,
+    validateFav,
+    handleValidationErrors,
+    FavController.updateById
+);
 
-router.delete("/:id", auth, requireRoles("admin"), FavController.deleteById);
+router.delete(
+    "/:user_id/:manga_id",
+    auth,
+    requireRoles("admin"),
+    validateDoubleIds,
+    handleValidationErrors,
+    FavController.deleteById
+);
 
 export default router;

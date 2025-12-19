@@ -72,7 +72,7 @@ export class AuthController {
                 },
             });
         } catch (err) {
-            res.status(409).json({ error: err.message });
+            return res.status(409).json({ error: err.message });
         }
     }
 
@@ -118,7 +118,7 @@ export class AuthController {
                 },
             });
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: err.message });
         }
     }
 

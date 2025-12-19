@@ -19,44 +19,32 @@ export class Fav {
         return result.rows;
     }
 
-    static async readById(id) {
+    static async readById(user_id, manga_id) {
         const result = await pool.query(
             `SELECT *
              FROM favs
-             WHERE id = $1`,
-            [id]
+             WHERE user_id = $1 AND manga_id = $2`,
+            [user_id, manga_id]
         );
         return result.rows[0];
     }
 
-    static async readByUserId(id) {
-        const result = await pool.query(
-            `SELECT m.id, m.title, m.cover_url
-             FROM favs f
-             JOIN mangas m ON m.id = f.id_manga
-             WHERE f.id_user = $1
-             ORDER BY m.title ASC`,
-            [id]
-        );
-        return result.rows;
-    }
-
-    static async updateById(id, { userId, mangaId }) {
+    static async updateById(user_id, manga_id, { userId, mangaId }) {
         const result = await pool.query(
             `UPDATE favs
              SET user_id = $1, manga_id = $2
-             WHERE id = $3
+             WHERE user_id = $3 AND manga_id = $4
              RETURNING *`,
-            [userId, mangaId, id]
+            [userId, mangaId, user_id, manga_id]
         );
         return result.rows[0];
     }
 
-    static async deleteById(id) {
+    static async deleteById(user_id, manga_id) {
         const result = await pool.query(
             `DELETE FROM favs
-             WHERE id = $1`,
-            [id]
+             WHERE user_id = $1 AND manga_id = $2`,
+            [user_id, manga_id]
         );
         return result.rowCount;
     }
